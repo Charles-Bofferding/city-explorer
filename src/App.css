@@ -1,21 +1,23 @@
+
+/* 
+Taking colors from Garnet of the crystal gems today
+
+Dark Purple: #25195f
+Lighter Purple: #50389c
+Crimson: #65204e
+Pink #ba2388
+Light grey: #87888d
+Dark grey: #424448
+
+*/
+
 .App {
   text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+  background-color: #50389c;
 }
 
 .App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+  background-color: #25195f;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -24,15 +26,6 @@
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.myTable {
+  background-color: #87888d;
 }

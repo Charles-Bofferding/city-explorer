@@ -1,6 +1,10 @@
 import React from 'react';
 import './App.css';
 import axios from 'axios';
+import Table from 'react-bootstrap/Table';
+import Image from 'react-bootstrap/Image';
+import 'bootstrap/dist/css/bootstrap.min.css';
+const API_KEY = process.env.REACT_APP_API_KEY;
 
 class App extends React.Component {
   
@@ -40,18 +44,61 @@ class App extends React.Component {
   }
 
   fetchLocation = async () => {
-    let response = await axios.get(`https://us1.locationiq.com/v1/search.php?key=pk.ca7576decb274b38b69c9ba95209131a&q=${this.state.search}&format=json`);
-    this.setCity(response);
+    if(this.state.search === ''){
+      console.error("Status Code: 400, 404, 500");
+      alert("Status Code: 400, 404, 500");
+      console.error("Error: Unable to Geocode");
+      alert("Error: Unable to Geocode");
+    }else{
+      let response = await axios.get(`https://us1.locationiq.com/v1/search.php?key=${API_KEY}&q=${this.state.search}&format=json`)
+      .then((response) => {
+        //This assumes that the first search result will be the correct one
+        this.setCity(response.data[0]);
+        this.setLat(this.state.cityObj.lat);
+        this.setLong(this.state.cityObj.lon);
+        this.fetchMap();
+      })
+      .catch((error) => console.error(error));
+    }
+  }
+
+  fetchMap = async () => {
+    let response = await axios.get(`https://maps.locationiq.com/v3/staticmap?key=${API_KEY}&center=${this.state.lat},${this.state.long}&zoom=13`);
+    this.setMap(response.config.url);
   }
 
   render() {
-    console.log(this.state.cityObj);
     return (
       <div className="App">
         <header className="App-header">
+          <h1>Welcome, Enter a City and Explore!</h1>
           <input onChange={(e) => {this.setState({ search: e.target.value })}} type='text' />
           <button onClick={this.fetchLocation}>Explore!</button>
+          <p>Empty Searches Throw Errors</p>
         </header>
+          <Table className="myTable" striped bordered hover>
+            <thead>
+              <tr>
+                <th>Data Type</th>
+                <th>Data Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>City Name</td>
+                <td>{this.state.cityObj.display_name}</td>
+              </tr>
+              <tr>
+                <td>Latitude</td>
+                <td>{this.state.lat}</td>
+              </tr>
+              <tr>
+                <td>Longitude</td>
+                <td>{this.state.long}</td>
+              </tr>
+            </tbody>
+          </Table>
+          <Image src={this.state.mapSrc} thumbnail />
       </div>
     );
   }
