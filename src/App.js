@@ -4,7 +4,7 @@ import axios from 'axios';
 import Table from 'react-bootstrap/Table';
 import Image from 'react-bootstrap/Image';
 import 'bootstrap/dist/css/bootstrap.min.css';
-const API_KEY = process.env.REACT_APP_API_KEY;
+
 
 class App extends React.Component {
   
@@ -44,6 +44,7 @@ class App extends React.Component {
   }
 
   fetchLocation = async () => {
+    const API_KEY = process.env.REACT_APP_API_KEY;
     if(this.state.search === ''){
       console.error("Status Code: 400, 404, 500");
       alert("Status Code: 400, 404, 500");
