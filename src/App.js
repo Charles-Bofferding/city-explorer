@@ -65,6 +65,7 @@ class App extends React.Component {
   }
 
   fetchMap = async () => {
+    const API_KEY = process.env.REACT_APP_API_KEY;
     let response = await axios.get(`https://maps.locationiq.com/v3/staticmap?key=${API_KEY}&center=${this.state.lat},${this.state.long}&zoom=13`);
     this.setMap(response.config.url);
   }
