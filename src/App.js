@@ -59,6 +59,7 @@ class App extends React.Component {
         this.fetchMap();
       })
       .catch((error) => console.error(error));
+      console.log(response);
     }
   }
 
