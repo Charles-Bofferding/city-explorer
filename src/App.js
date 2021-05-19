@@ -4,11 +4,11 @@ import axios from 'axios';
 import Table from 'react-bootstrap/Table';
 import Image from 'react-bootstrap/Image';
 import 'bootstrap/dist/css/bootstrap.min.css';
-
+//import Weather from './weather.js';
+const API_KEY = process.env.REACT_APP_API_KEY;
 
 class App extends React.Component {
-  
-  
+
   constructor() {
     super();
     this.state = {
@@ -16,7 +16,8 @@ class App extends React.Component {
       lat: 0,
       long: 0,
       mapSrc: '',
-      cityObj: {}
+      cityObj: {},
+      weather: []
     }
   }
 
@@ -43,34 +44,49 @@ class App extends React.Component {
     this.setState({ cityObj: cityReturn }, () => console.log(this.state.cityObj));
   }
 
+  setWeather = (weatherData) => {
+    this.setState({ weather: weatherData }, () => console.log(this.state.weather));
+  }
+
   fetchLocation = async () => {
-    const API_KEY = process.env.REACT_APP_API_KEY;
+    //If search is empty return the error messages
     if(this.state.search === ''){
       console.error("Status Code: 400, 404, 500");
       alert("Status Code: 400, 404, 500");
       console.error("Error: Unable to Geocode");
       alert("Error: Unable to Geocode");
     }else{
+      //First try pulling the city basic data
       let response = await axios.get(`https://us1.locationiq.com/v1/search.php?key=${API_KEY}&q=${this.state.search}&format=json`)
       .then((response) => {
         //This assumes that the first search result will be the correct one
+
+        //Get the basic data for the other calls out of the response
         this.setCity(response.data[0]);
         this.setLat(this.state.cityObj.lat);
         this.setLong(this.state.cityObj.lon);
+
+        //Start making the other calls that are not dependant on each other so can be called asynchronously at the same time.
         this.fetchMap();
+        this.fetchWeather();
       })
       .catch((error) => console.error(error));
       console.log(response);
     }
   }
 
+  fetchWeather = async () => {
+    let response = await axios.get(`http://localhost:3030/weather?lat=14.15678&lon=14.abc&searchQuery=Seattle`);
+    this.setWeather(response);
+  }
+
   fetchMap = async () => {
-    const API_KEY = process.env.REACT_APP_API_KEY;
     let response = await axios.get(`https://maps.locationiq.com/v3/staticmap?key=${API_KEY}&center=${this.state.lat},${this.state.long}&zoom=13`);
     this.setMap(response.config.url);
   }
 
   render() {
+    console.log(this.state.weather);
     return (
       <div className="App">
         <header className="App-header">
@@ -102,6 +118,24 @@ class App extends React.Component {
             </tbody>
           </Table>
           <Image src={this.state.mapSrc} thumbnail />
+
+          <Table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Weather Description</th>
+              </tr>
+            </thead>
+            {/* <tbody>
+              {this.state.weather.map((day, idx) => (
+                <Weather
+                  info = {day}
+                />
+              ))}
+            </tbody> */}
+          </Table>
+
+
       </div>
     );
   }
