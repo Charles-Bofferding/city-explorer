@@ -1,4 +1,6 @@
 import React from 'react';
+import Table from 'react-bootstrap/Table';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 class Weather extends React.Component{
   constructor(props){
@@ -10,10 +12,26 @@ class Weather extends React.Component{
 
   render(){
     return (
-      <tr>
-        <td>{this.props.info.date}</td>
-        <td>{this.props.info.description}</td>
-      </tr>
+      <div>
+        <Table className="myTable" striped bordered hover>
+          <thead>
+            <tr>
+              <th>Forecast Date</th>
+              <th>Weatehr Description</th>
+            </tr>
+          </thead>
+          <tbody>
+          {this.props.weather.map(day => {
+            return (
+              <tr>
+                <td>{day.date}</td>
+                <td>{day.description}</td>
+              </tr>
+            )
+          })}
+          </tbody>
+        </Table>
+      </div>
     );
   }
 
