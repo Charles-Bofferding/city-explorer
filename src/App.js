@@ -1,10 +1,12 @@
 import React from 'react';
 import './App.css';
 import axios from 'axios';
-import Table from 'react-bootstrap/Table';
-import Image from 'react-bootstrap/Image';
+// import Table from 'react-bootstrap/Table';
+// import Image from 'react-bootstrap/Image';
 import 'bootstrap/dist/css/bootstrap.min.css';
-//import Weather from './weather.js';
+import Weather from './weather.js';
+import Map from './map.js';
+import Movies from './movies.js';
 const API_KEY = process.env.REACT_APP_API_KEY;
 
 class App extends React.Component {
@@ -17,72 +19,48 @@ class App extends React.Component {
       long: 0,
       mapSrc: '',
       cityObj: {},
-      weather: []
+      weather: [],
+      movies: [],
+      searched: false
     }
   }
-
-  //Setting up the modifying state functions
-  //Expect to break App into main class's later and it will be easier to pass down
   
-  setSearch = (term) => {
-    this.setState({ search: term }, () => console.log(this.state.search));
-  }
-
-  setLat = (latitude) => {
-    this.setState({ lat: latitude }, () => console.log(this.state.lat));
-  }
-  
-  setLong = (longitude) => {
-    this.setState({ long: longitude }, () => console.log(this.state.long));
-  }
-  
-  setMap = (mapSource) => {
-    this.setState({ mapSrc: mapSource }, () => console.log(this.state.mapSrc));
-  }
-
-  setCity = (cityReturn) => {
-    this.setState({ cityObj: cityReturn }, () => console.log(this.state.cityObj));
-  }
-
-  setWeather = (weatherData) => {
-    this.setState({ weather: weatherData }, () => console.log(this.state.weather));
-  }
-
+  //Larger calling method that will first directly get city then pass info to server calls
   fetchLocation = async () => {
-    //If search is empty return the error messages
-    if(this.state.search === ''){
-      console.error("Status Code: 400, 404, 500");
-      alert("Status Code: 400, 404, 500");
-      console.error("Error: Unable to Geocode");
-      alert("Error: Unable to Geocode");
-    }else{
-      //First try pulling the city basic data
-      let response = await axios.get(`https://us1.locationiq.com/v1/search.php?key=${API_KEY}&q=${this.state.search}&format=json`)
-      .then((response) => {
-        //This assumes that the first search result will be the correct one
+    
+    //First try pulling the city basic data, if this works call other request functions
+    let response = await axios.get(`https://us1.locationiq.com/v1/search.php?key=${API_KEY}&q=${this.state.search}&format=json`);
 
-        //Get the basic data for the other calls out of the response
-        this.setCity(response.data[0]);
-        this.setLat(this.state.cityObj.lat);
-        this.setLong(this.state.cityObj.lon);
+    //Get the basic data for the other calls out of the response
+    //This assumes that the first search result will be the correct one
+    this.setState({ cityObj: response.data[0] }, () => console.log(this.state.cityObj));
+    this.setState({ lat: this.state.cityObj.lat }, () => console.log(this.state.lat));
+    this.setState({ long: this.state.cityObj.lon }, () => console.log(this.state.long));
+    
+    //Start making the other calls that are not dependant on each other so can be called asynchronously at the same time.
+    await this.fetchMap();
+    await this.fetchWeather();
+    await this.fetchMovie();
 
-        //Start making the other calls that are not dependant on each other so can be called asynchronously at the same time.
-        this.fetchMap();
-        this.fetchWeather();
-      })
-      .catch((error) => console.error(error));
-      console.log(response);
-    }
+    //Let the page know it can load the info now
+    this.setState({searched: true});
+      
+
+  }
+  
+  fetchMap = async () => {
+    let response = await axios.get(`https://maps.locationiq.com/v3/staticmap?key=${API_KEY}&center=${this.state.lat},${this.state.long}&zoom=13`);
+    this.setState({ mapSrc: response }, () => console.log(this.state.mapSrc));
   }
 
   fetchWeather = async () => {
     let response = await axios.get(`http://localhost:3030/weather?lat=14.15678&lon=14.abc&searchQuery=Seattle`);
-    this.setWeather(response);
+    this.setState({ weather: response }, () => console.log(this.state.weather));
   }
-
-  fetchMap = async () => {
-    let response = await axios.get(`https://maps.locationiq.com/v3/staticmap?key=${API_KEY}&center=${this.state.lat},${this.state.long}&zoom=13`);
-    this.setMap(response.config.url);
+  
+  fetchMovie = async () => {
+    let response = await axios.get(`http://localhost:3030/movies?search=${this.state.search}`);
+    this.setState({ movies: response }, () => console.log(this.state.movies));
   }
 
   render() {
@@ -95,47 +73,20 @@ class App extends React.Component {
           <button onClick={this.fetchLocation}>Explore!</button>
           <p>Empty Searches Throw Errors</p>
         </header>
-          <Table className="myTable" striped bordered hover>
-            <thead>
-              <tr>
-                <th>Data Type</th>
-                <th>Data Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>City Name</td>
-                <td>{this.state.cityObj.display_name}</td>
-              </tr>
-              <tr>
-                <td>Latitude</td>
-                <td>{this.state.lat}</td>
-              </tr>
-              <tr>
-                <td>Longitude</td>
-                <td>{this.state.long}</td>
-              </tr>
-            </tbody>
-          </Table>
-          <Image src={this.state.mapSrc} thumbnail />
-
-          <Table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Weather Description</th>
-              </tr>
-            </thead>
-            {/* <tbody>
-              {this.state.weather.map((day, idx) => (
-                <Weather
-                  info = {day}
-                />
-              ))}
-            </tbody> */}
-          </Table>
-
-
+        { this.state.searched ?
+          <div>
+            <Map
+              mapSRC={this.state.mapSRC}
+              cityObj={this.state.cityObj}
+            />
+            <Weather
+              weather={this.state.weather}
+            />
+            <Movies
+              movies={this.state.movies}
+            />
+          </div>
+          : null}
       </div>
     );
   }
